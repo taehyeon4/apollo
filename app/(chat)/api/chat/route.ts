@@ -111,8 +111,11 @@ export async function POST(request: Request) {
 
     // Enhance system prompt with trademark context if available
     const enhancedSystemPrompt = trademarkContext
-      ? `${systemPrompt({ selectedChatModel })}\n\n${trademarkContext}`
-      : systemPrompt({ selectedChatModel });
+      ? `${systemPrompt({ selectedChatModel, isFirstMessage: messages.length === 1 })}\n\n${trademarkContext}`
+      : systemPrompt({
+          selectedChatModel,
+          isFirstMessage: messages.length === 1,
+        });
 
     return createDataStreamResponse({
       execute: (dataStream) => {
