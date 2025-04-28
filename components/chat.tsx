@@ -116,16 +116,21 @@ export function Chat({
                     }
                   }}
                 />
-                <Button
-                  className="self-end"
-                  onClick={(e: React.MouseEvent) => {
-                    if (input.trim()) {
-                      handleSubmit(e as any);
-                    }
-                  }}
-                >
-                  Send
-                </Button>
+                <div className="flex justify-between">
+                  <Button variant="outline" size="sm">
+                    Generate Report
+                  </Button>
+                  <Button
+                    className="self-end"
+                    onClick={(e: React.MouseEvent) => {
+                      if (input.trim()) {
+                        handleSubmit(e as any);
+                      }
+                    }}
+                  >
+                    Send
+                  </Button>
+                </div>
               </div>
             )}
           </form>
