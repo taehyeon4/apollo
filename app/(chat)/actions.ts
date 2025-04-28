@@ -1,6 +1,6 @@
 'use server';
 
-import { generateText, Message } from 'ai';
+import { Message } from 'ai';
 import { cookies } from 'next/headers';
 
 import {
@@ -9,7 +9,6 @@ import {
   updateChatVisiblityById,
 } from '@/lib/db/queries';
 import { VisibilityType } from '@/components/visibility-selector';
-import { myProvider } from '@/lib/ai/providers';
 
 export async function saveChatModelAsCookie(model: string) {
   const cookieStore = await cookies();
@@ -21,17 +20,20 @@ export async function generateTitleFromUserMessage({
 }: {
   message: Message;
 }) {
-  const { text: title } = await generateText({
-    model: myProvider.languageModel('title-model'),
-    system: `\n
-    - you will generate a short title based on the first message a user begins a conversation with
-    - ensure it is not more than 80 characters long
-    - the title should be a summary of the user's message
-    - do not use quotes or colons`,
-    prompt: JSON.stringify(message),
-  });
+  // Extract the trademark name using regex from the user message
+  const userMessage = message.content;
 
-  return title;
+  // Use regex to extract trademark name from pattern "Analyze trademark: NAME"
+  const trademarkRegex = /Analyze trademark: (.*?)(?:\n|$)/i;
+  const match = userMessage.match(trademarkRegex);
+
+  // If regex match found, use the captured group as the title
+  // Otherwise fall back to the first line or default title
+  const trademarkName = match
+    ? match[1].trim().substring(0, 80)
+    : userMessage.split('\n')[0].trim().substring(0, 80);
+
+  return trademarkName || 'New Trademark Analysis';
 }
 
 export async function deleteTrailingMessages({ id }: { id: string }) {
