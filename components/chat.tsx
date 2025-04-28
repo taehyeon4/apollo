@@ -8,13 +8,16 @@ import { ChatHeader } from '@/components/chat-header';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 import { Artifact } from './artifact';
-import { MultimodalInput } from './multimodal-input';
+import { TrademarkInputForm } from './trademark-input-form';
 import { Messages } from './messages';
 import type { VisibilityType } from './visibility-selector';
 import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
 import { unstable_serialize } from 'swr/infinite';
 import { getChatHistoryPaginationKey } from './sidebar-history';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
+import React from 'react';
 
 export function Chat({
   id,
@@ -85,23 +88,48 @@ export function Chat({
           isArtifactVisible={isArtifactVisible}
         />
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
-          {!isReadonly && (
-            <MultimodalInput
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              handleSubmit={handleSubmit}
-              status={status}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
-              messages={messages}
-              setMessages={setMessages}
-              append={append}
-            />
-          )}
-        </form>
+        {!isReadonly && messages.length === 0 ? (
+          <TrademarkInputForm chatId={id} append={append} />
+        ) : (
+          <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+            {!isReadonly && messages.length > 0 && (
+              <div className="w-full flex flex-col gap-2">
+                <Textarea
+                  placeholder="Ask follow-up questions about the trademark analysis..."
+                  value={input}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setInput(e.target.value)
+                  }
+                  className="min-h-[60px] resize-none rounded-xl !text-base bg-muted p-4 dark:border-zinc-700"
+                  onKeyDown={(
+                    event: React.KeyboardEvent<HTMLTextAreaElement>,
+                  ) => {
+                    if (
+                      event.key === 'Enter' &&
+                      !event.shiftKey &&
+                      !event.nativeEvent.isComposing
+                    ) {
+                      event.preventDefault();
+                      if (input.trim()) {
+                        handleSubmit(event);
+                      }
+                    }
+                  }}
+                />
+                <Button
+                  className="self-end"
+                  onClick={(e: React.MouseEvent) => {
+                    if (input.trim()) {
+                      handleSubmit(e as any);
+                    }
+                  }}
+                >
+                  Send
+                </Button>
+              </div>
+            )}
+          </form>
+        )}
       </div>
 
       <Artifact

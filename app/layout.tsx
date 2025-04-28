@@ -7,8 +7,9 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'Next.js Chatbot Template',
-  description: 'Next.js chatbot template using the AI SDK.',
+  title: 'Apollo - Trademark Registrability Analysis Tool',
+  description:
+    'Analyze the registrability of trademarks with Apollo, a specialized trademark analysis assistant.',
 };
 
 export const viewport = {

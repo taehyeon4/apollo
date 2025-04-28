@@ -18,6 +18,7 @@ import {
   getMostRecentUserMessage,
   getTrailingMessageId,
 } from '@/lib/utils';
+import { getTrademarkSearch } from '@/lib/utils/trademark-search';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
@@ -79,11 +80,46 @@ export async function POST(request: Request) {
       ],
     });
 
+    // Extract trademark name from user message for first-time analysis
+    let trademarkContext = '';
+    if (messages.length === 1) {
+      const messageContent = userMessage.content.toString();
+      const trademarkMatch = messageContent.match(
+        /Analyze trademark: (.*?)(?:\n|$)/i,
+      );
+
+      if (trademarkMatch?.[1]) {
+        const trademarkName = trademarkMatch[1];
+        try {
+          console.log(`Searching for trademark: ${trademarkName}`);
+          const searchResults = await getTrademarkSearch(trademarkName);
+          console.log('searchResults', searchResults);
+
+          if (searchResults && searchResults.length > 0) {
+            // Simply add the raw search results as context
+            trademarkContext = `\n\nRELEVANT TRADEMARK SEARCH RESULTS:\n${JSON.stringify(searchResults, null, 2)}`;
+          } else {
+            trademarkContext = `\n\nNo similar registered trademarks were found in the USPTO database.`;
+          }
+        } catch (error) {
+          console.error('Error fetching trademark data:', error);
+          trademarkContext = `\n\nNote: Unable to fetch relevant trademark data from USPTO.`;
+        }
+      }
+    }
+
+    console.log('trademarkContext', trademarkContext);
+
+    // Enhance system prompt with trademark context if available
+    const enhancedSystemPrompt = trademarkContext
+      ? `${systemPrompt({ selectedChatModel })}\n\n${trademarkContext}`
+      : systemPrompt({ selectedChatModel });
+
     return createDataStreamResponse({
       execute: (dataStream) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel }),
+          system: enhancedSystemPrompt,
           messages,
           maxSteps: 5,
           experimental_activeTools:
