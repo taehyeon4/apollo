@@ -7,8 +7,12 @@ import { getUser } from '@/lib/db/queries';
 import { authConfig } from './auth.config';
 import { DUMMY_PASSWORD } from '@/lib/constants';
 
+interface ExtendedUser extends User {
+  role?: string;
+}
+
 interface ExtendedSession extends Session {
-  user: User;
+  user: ExtendedUser;
 }
 
 export const {
@@ -40,7 +44,7 @@ export const {
 
         if (!passwordsMatch) return null;
 
-        return user as any;
+        return user as ExtendedUser;
       },
     }),
   ],
@@ -48,6 +52,7 @@ export const {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as ExtendedUser).role;
       }
 
       return token;
@@ -61,6 +66,7 @@ export const {
     }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
 
       return session;

@@ -46,6 +46,14 @@ export async function POST(request: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
+    // Check user role from session
+    if (session.user.role === 'guest') {
+      return new Response(
+        'Guest users cannot make queries please contact admin for access',
+        { status: 403 },
+      );
+    }
+
     const userMessage = getMostRecentUserMessage(messages);
 
     if (!userMessage) {
