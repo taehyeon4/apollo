@@ -26,6 +26,11 @@ import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 
+interface ExtendedUser {
+  id: string;
+  role?: string;
+}
+
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
@@ -46,8 +51,10 @@ export async function POST(request: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
+    const user = session.user as ExtendedUser;
+
     // Check user role from session
-    if (session.user.role === 'guest') {
+    if (user.role === 'guest') {
       return new Response(
         'Guest users cannot make queries please contact admin for access',
         { status: 403 },
